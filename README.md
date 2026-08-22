@@ -10,10 +10,11 @@ pip install -r requirements.txt
 
 ## Run The Application
 ```bash
-python app.py
+python run_dev.py
 ```
 
-The application will run on `http://127.0.0.1:5000`
+The application will run on `http://127.0.0.1:5000`. Readiness can be checked
+at `http://127.0.0.1:5000/healthz`.
 
 ## Features
 
@@ -40,6 +41,10 @@ Comprehensive login bypass test scenarios for HTLogin and other security testing
 ### Other Web Vulnerabilities
 - **SSTI** - Server-Side Template Injection demonstration (vulnerable + safe)
 - **403 Forbidden Bypass** - Header-based bypass techniques (X-Forwarded-For, X-Forwarded-Host, X-Custom-IP-Authorization)
+- **403 Regression Matrix** - Local-only scenarios for original/rewrite headers,
+  method overrides, trusted-header combinations, and false-positive responses
+  (`/403/fake-200`, `/403/fake-302`, `/403/dynamic-forbidden`,
+  `/403/same-length-different-body`, `/403/fake-json-200`)
 - **Path Traversal / File Inclusion** - File inclusion vulnerabilities (vulnerable, semi-secure, secure, double-encoding)
 
 ### SSRF Test Scenarios
@@ -107,6 +112,19 @@ not start a server or send traffic outside the local process:
 python -m pip install -r requirements-dev.txt
 pytest -q
 ```
+
+The repository also runs this lab-only suite in GitHub Actions across Python
+3.10 through 3.13.
+
+NoMoreForbidden integration coverage can start the lab without Flask's
+reloader:
+
+```bash
+python run_dev.py
+```
+
+The lab is intentionally local-only. Do not expose it to a network you do not
+control or reuse its credentials outside the training scenarios.
 
 The suite verifies the documented vulnerable and secure behaviors, including
 SQL/NoSQL/XPath/LDAP payload handling, default credentials, rate limiting,

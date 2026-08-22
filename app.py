@@ -310,6 +310,12 @@ def _ics_auth_ok(req) -> bool:
 def index():
     return render_template('index.html')
 
+
+@app.route('/healthz')
+def healthz():
+    """Local readiness endpoint used by regression tests and lab tooling."""
+    return jsonify({"status": "ok", "service": "renikApp"})
+
 # ─── 403 Bypass ──────────────────────────────────────────────────────────────
 
 @app.route('/403')
@@ -325,6 +331,71 @@ def secret():
     if request.headers.get('X-Forwarded-For') == "127.0.0.1":
         return "Bypassed using X-Forwarded-For header"
     abort(403)
+
+
+@app.route('/403/original-url-only')
+def original_url_only():
+    """Lab-only scenario: trusts a proxy rewrite header for the protected path."""
+    rewrite_target = request.headers.get('X-Original-URL') or request.headers.get('X-Rewrite-URL')
+    if rewrite_target in ('/403/original-url-only', '/403/secret'):
+        return "Bypassed using a proxy rewrite header"
+    abort(403)
+
+
+@app.route('/403/method-override-only')
+def method_override_only():
+    """Lab-only scenario: trusts a method-override header from an upstream proxy."""
+    override = (
+        request.headers.get('X-HTTP-Method-Override')
+        or request.headers.get('X-HTTP-Method')
+        or request.headers.get('X-Method-Override')
+    )
+    if override in ('GET', 'HEAD', 'OPTIONS', 'PATCH', 'PUT', 'DELETE'):
+        return "Bypassed using a method override header"
+    abort(403)
+
+
+@app.route('/403/header-combo-only')
+def header_combo_only():
+    """Lab-only scenario: requires two independently trusted proxy headers."""
+    internal_ip = request.headers.get('X-Forwarded-For') == '127.0.0.1'
+    rewrite_target = request.headers.get('X-Original-URL') or request.headers.get('X-Rewrite-URL')
+    if internal_ip and rewrite_target in ('/403/header-combo-only', '/403/secret'):
+        return "Bypassed using a trusted-header combination"
+    abort(403)
+
+
+@app.route('/403/fake-200')
+def fake_200():
+    """Lab-only false-positive scenario: forbidden content with a 200 status."""
+    response = app.make_response(render_template('403/403.html'))
+    response.status_code = 200
+    return response
+
+
+@app.route('/403/fake-302')
+def fake_302():
+    """Lab-only false-positive scenario: redirects into the forbidden area."""
+    return redirect('/403', code=302)
+
+
+@app.route('/403/dynamic-forbidden')
+def dynamic_forbidden():
+    """Lab-only false-positive scenario: deny body changes on every request."""
+    return f"Forbidden: dynamic denial marker {time.time_ns()}-{random.getrandbits(32)}", 403
+
+
+@app.route('/403/same-length-different-body')
+def same_length_different_body():
+    """Lab-only false-positive scenario: deny-like body with a stable length."""
+    body = "Access denied: this is a simulated protected response."
+    return body[:54].ljust(54, ' '), 200
+
+
+@app.route('/403/fake-json-200')
+def fake_json_200():
+    """Lab-only false-positive scenario: JSON deny semantics with a 200 status."""
+    return jsonify({"status": "error", "message": "access denied", "code": 403}), 200
 
 # ─── SSTI ────────────────────────────────────────────────────────────────────
 

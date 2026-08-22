@@ -1,19 +1,47 @@
-# Runtime
-server.log
-server.err
-*.log
-*.err
-
-# Database (auto-created on first run)
+# Local database and runtime output
 users.db
 *.db
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
+*.db-shm
+*.db-wal
+*.log
+*.err
 .env
+.env.*
+.envrc
 
-# OS
+# Credentials, private keys, and local certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.kdbx
+*credentials*
+*credential*
+*secrets*
+*secret*
+*token*
+!secret/secret.txt
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+
+# Build and distribution output
+build/
+dist/
+*.whl
+*.tar.gz
+
+# Editor and operating-system files
+.idea/
+.vscode/
 .DS_Store
 Thumbs.db
