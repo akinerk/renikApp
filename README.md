@@ -98,6 +98,20 @@ python main.py -u http://127.0.0.1:5000/lp/insecure-login
 python main.py -u http://127.0.0.1:5000/lp/default-login -cl credentials.txt
 ```
 
+### Run local regression scenarios
+
+The repository includes Flask test-client scenarios for the login lab. They do
+not start a server or send traffic outside the local process:
+
+```bash
+python -m pip install -r requirements-dev.txt
+pytest -q
+```
+
+The suite verifies the documented vulnerable and secure behaviors, including
+SQL/NoSQL/XPath/LDAP payload handling, default credentials, rate limiting,
+username enumeration, CSRF handling, JSON login, and GraphQL login.
+
 ## SSRF Scenarios
 
 ```bash
